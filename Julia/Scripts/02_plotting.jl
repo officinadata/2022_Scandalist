@@ -76,9 +76,113 @@ of the average number of mentions per tweet grouped by the date manipulation fun
 A plot of average mentions by date function grouping
 """
 function generate_avg_mentions_by_plot(twit_data::DataFrame, date_func::Function)
-    mentions = data(get_avg_mentions_by(twit_data, date_func)) *
+    mentions = data(get_mentions_by(twit_data, date_func, mean)) *
         visual(Lines) *
-        mapping(Symbol(date_func) => string(date_func), :avg_n_mentions => "Average number of mentions per tweet")
+        mapping(Symbol(date_func) => string(date_func), :nmentions => "Average number of mentions per tweet")
+
+    draw(mentions)
+end
+
+
+"""
+Takes a DataFrame of Twitter data and date manipulation function and produces a plot
+of the total number of mentions grouped by the date manipulation function
+
+# Arguments
+- `twit_data::DataFrame`: Twitter data
+- `date_func::Function`: Date manipulation function
+
+# Output
+A plot of total mentions by date function grouping
+"""
+function generate_total_mentions_by_plot(twit_data::DataFrame, date_func::Function)
+    mentions = data(get_mentions_by(twit_data, date_func, sum)) *
+        visual(Lines) *
+        mapping(Symbol(date_func) => string(date_func), :nmentions => "Total number of mentions")
+
+    draw(mentions)
+end
+
+
+"""
+Takes a DataFrame of Twitter data and date manipulation function and produces a plot
+of the average number of retweets per tweet grouped by the date manipulation function
+
+# Arguments
+- `twit_data::DataFrame`: Twitter data
+- `date_func::Function`: Date manipulation function
+
+# Output
+A plot of average retweets by date function grouping
+"""
+function generate_avg_retweets_by_plot(twit_data::DataFrame, date_func::Function)
+    df = select(get_interactions_by(twit_data, date_func, mean), Not(:nquotes))
+    mentions = data(df) *
+        visual(Lines) *
+        mapping(Symbol(date_func) => string(date_func), :nretweets => "Average number of retweets per tweet")
+
+    draw(mentions)
+end
+
+
+"""
+Takes a DataFrame of Twitter data and date manipulation function and produces a plot
+of the total number of grouped by the date manipulation function
+
+# Arguments
+- `twit_data::DataFrame`: Twitter data
+- `date_func::Function`: Date manipulation function
+
+# Output
+A plot of total retweets by date function grouping
+"""
+function generate_total_retweets_by_plot(twit_data::DataFrame, date_func::Function)
+    df = select(get_interactions_by(twit_data, date_func, sum), Not(:nquotes))
+    mentions = data(df) *
+        visual(Lines) *
+        mapping(Symbol(date_func) => string(date_func), :nretweets => "Total number of retweets")
+
+    draw(mentions)
+end
+
+
+"""
+Takes a DataFrame of Twitter data and date manipulation function and produces a plot
+of the average number of quotes per tweet grouped by the date manipulation function
+
+# Arguments
+- `twit_data::DataFrame`: Twitter data
+- `date_func::Function`: Date manipulation function
+
+# Output
+A plot of average quote tweets by date function grouping
+"""
+function generate_avg_quotes_by_plot(twit_data::DataFrame, date_func::Function)
+    df = select(get_interactions_by(twit_data, date_func, mean), Not(:nretweets))
+    mentions = data(df) *
+        visual(Lines) *
+        mapping(Symbol(date_func) => string(date_func), :nquotes => "Average number of quotes per tweet")
+
+    draw(mentions)
+end
+
+
+"""
+Takes a DataFrame of Twitter data and date manipulation function and produces a plot
+of the total number of quotes grouped by the date manipulation function
+
+# Arguments
+- `twit_data::DataFrame`: Twitter data
+- `date_func::Function`: Date manipulation function
+
+# Output
+A plot of total quote tweets by date function grouping
+"""
+function generate_total_quotes_by_plot(twit_data::DataFrame, date_func::Function)
+    df = select(get_interactions_by(twit_data, date_func, sum), Not(:nretweets))
+    mentions = data(df) *
+        visual(Lines) *
+        mapping(Symbol(date_func) => string(date_func), :nquotes => "Total number of quotes")
 
     draw(mentions)
 end

@@ -50,19 +50,20 @@ end
 
 """
 Takes a DataFrame of Twitter data and a date manipulation function to group on and calculates
-average number of quotes and retweets per tweet
+number of quotes and retweets
 
 # Arguments
 - `twit_data::DataFrame`: Twitter data
 - `date_func::Function`: Date manipulation function
+- `manip_func::Function`: Column manipulation function (default mean)
 
 # Returns
 -  `DataFrame`: Containing date function output, nquotes and nretweets
 """
-function get_avg_interactions_by(twit_data::DataFrame, date_func::Function)
+function get_interactions_by(twit_data::DataFrame, date_func::Function, manip_func::Function = mean)
     interactions = @chain twit_data begin
         @transform(:temp = date_func.(:date))
-        @by(:temp, :nquotes = mean(:quote_count), :nretweets = mean(:retweet_count))
+        @by(:temp, :nquotes = manip_func(:quote_count), :nretweets = manip_func(:retweet_count))
     end
 
     rename!(interactions, :temp => Symbol(date_func))
@@ -91,24 +92,25 @@ end
 
 """
 Takes a DataFrame of Twitter data and a date manipulation function to group on and calculates
-average number of mentions per tweet
+number of mentions
 
 # Arguments
 - `twit_data::DataFrame`: Twitter data
 - `date_func::Function`: Date manipulation function
+- `manip_func::Function`: Column manipulation function (default mean)
 
 # Returns
--  `DataFrame`: Containing date function output and average number of mentions
+-  `DataFrame`: Containing date function output and number of mentions
 """
-function get_avg_mentions_by(twit_data::DataFrame, date_func::Function)
+function get_mentions_by(twit_data::DataFrame, date_func::Function, manip_func::Function = mean)
     twit_data = add_mentions(twit_data)
     
-    avg_mentions_by = @chain twit_data begin
+    mentions_by = @chain twit_data begin
         @transform(:temp = date_func.(:date))
-        @by(:temp, :avg_n_mentions = mean(:n_mentions))
+        @by(:temp, :nmentions = manip_func(:n_mentions))
     end
 
-    rename!(avg_mentions_by, :temp => Symbol(date_func))
+    rename!(mentions_by, :temp => Symbol(date_func))
 
-    return avg_mentions_by
+    return mentions_by
 end
