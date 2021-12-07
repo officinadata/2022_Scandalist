@@ -45,7 +45,7 @@ get_mentions_by(Pepsi_data, week, sum)
 
 # Plotting functions
 
-generate_volume_by_plot(Pepsi_data, week)
+generate_volume_by_plot(Pepsi_data, dayofyear)
 
 generate_cumulative_volume_by_plot(Pepsi_data, dayofyear)
 
@@ -60,3 +60,34 @@ generate_total_retweets_by_plot(Pepsi_data, dayofyear)
 generate_avg_quotes_by_plot(Pepsi_data, dayofyear)
 
 generate_total_quotes_by_plot(Pepsi_data, dayofyear)
+
+
+# ROUGH NETWORK TESTING
+
+using Graphs
+using SparseArrays
+using DataStructures
+
+pepsi_with_mentions = dropmissing(filter(:mentions => !=([]), select(add_mentions(Pepsi_data), :user_username, :mentions)))
+total_nodes = vcat(unique(pepsi_with_mentions[!, :user_username]), unique(reduce(vcat, pepsi_with_mentions[!, :mentions])))
+m = Matrix(pepsi_with_mentions)
+
+am = spzeros(Bool, length(total_nodes), length(total_nodes))
+
+for i = 1:size(pepsi_with_mentions, 1)
+    index1 = findfirst(==(m[i,1]), total_nodes)
+    for j = 1:size(m[i,2],1)
+        am[index1, findfirst(==(m[i,2][j]), total_nodes)] = true
+    end
+end
+
+g = SimpleDiGraph(am)
+savegraph("mention_graph.lgz", g)
+g = loadgraph("mention_graph.lgz")
+
+cen_df = DataFrame(user_name=total_nodes, centrality=eigenvector_centrality(g))
+print(first(sort(cen_df, :centrality, rev=true), 20))
+
+c = counter(filter(!=("NA"), Pepsi_data.sourcetweet_author_id))
+c_df = DataFrame(source_id=collect(keys(c)), count=collect(values(c)))
+print(first(sort(c_df, :count, rev=true), 20))
