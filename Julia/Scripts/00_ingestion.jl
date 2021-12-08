@@ -69,7 +69,7 @@ using SparseArrays
 using DataStructures
 
 pepsi_with_mentions = dropmissing(filter(:mentions => !=([]), select(add_mentions(Pepsi_data), :user_username, :mentions)))
-total_nodes = vcat(unique(pepsi_with_mentions[!, :user_username]), unique(reduce(vcat, pepsi_with_mentions[!, :mentions])))
+total_nodes = unique(vcat(pepsi_with_mentions[!, :user_username], reduce(vcat, pepsi_with_mentions[!, :mentions])))
 m = Matrix(pepsi_with_mentions)
 
 am = spzeros(Bool, length(total_nodes), length(total_nodes))
