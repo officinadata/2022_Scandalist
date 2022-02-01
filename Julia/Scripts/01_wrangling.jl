@@ -1,12 +1,3 @@
-using Chain
-using DataFrames
-using DataFramesMeta
-using Dates
-
-
-include("../src/tweet_mining.jl")
-
-
 """
 Takes a DataFrame of Twitter data and a date manipulation function to group on and calculates volume
 

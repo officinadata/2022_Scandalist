@@ -1,13 +1,3 @@
-using Chain
-using DataFrames
-using DataFramesMeta
-using Dates
-using CairoMakie, AlgebraOfGraphics
-
-
-include("01_wrangling.jl")
-
-
 """
 Takes a DataFrame of Twitter data and plots the 'ratio' or number retweets against the number of quotes
 
