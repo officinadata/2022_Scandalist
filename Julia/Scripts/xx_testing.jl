@@ -93,4 +93,4 @@ g = loadgraph("reply_quote_graph.lgz")
 
 mg = add_meta_retweet_quote_graph(Pepsi_data, g)
 
-slice_mg = take_slice(mg, Date(2017,4,3), dayofyear)
+slice_mg = take_slice(mg, Date(2017,4,3), week)

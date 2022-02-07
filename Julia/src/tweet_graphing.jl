@@ -120,7 +120,7 @@ data from chosen time slice
 - `mg::MetaGraph`: Directed bipartite network from user to tweet based on retweets and quotes with :datetimes edge
 property
 - `d::Date`: Date for slicing
-- `date_func::Function`: Optional date manipulation function slice with e.g week, month
+- `date_func::Function`: Optional date manipulation function to slice with e.g week, month
 
 # Returns
 -  `MetaGraph`: Sliced directed bipartite network from user to tweet based on retweets and quotes with meta info
