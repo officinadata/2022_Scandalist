@@ -8,6 +8,7 @@ using Revise
 
 include("../src/tweet_mining.jl")
 include("../src/tweet_helpers.jl")
+include("../src/tweet_graphing.jl")
 
 using Chain
 using CairoMakie
@@ -71,20 +72,8 @@ generate_total_quotes_by_plot(Pepsi_data, dayofyear)
 
 # ROUGH MENTIONS NETWORK TESTING
 
-pepsi_with_mentions = dropmissing(filter(:mentions => !=([]), select(add_mentions(Pepsi_data), :user_username, :mentions)))
-total_nodes = unique(vcat(pepsi_with_mentions[!, :user_username], reduce(vcat, pepsi_with_mentions[!, :mentions])))
-m = Matrix(pepsi_with_mentions)
+g = generate_mentions_graph(Pepsi_data)
 
-am = spzeros(Bool, length(total_nodes), length(total_nodes))
-
-for i = 1:size(pepsi_with_mentions, 1)
-    index1 = findfirst(==(m[i,1]), total_nodes)
-    for j = 1:size(m[i,2],1)
-        am[index1, findfirst(==(m[i,2][j]), total_nodes)] = true
-    end
-end
-
-g = SimpleDiGraph(am)
 savegraph("mention_graph.lgz", g)
 g = loadgraph("mention_graph.lgz")
 
@@ -97,51 +86,11 @@ print(first(sort(c_df, :count, rev=true), 20))
 
 # ROUGH REPLY / QUOTES NETWORK TESTING
 
-pepsi_short = dropmissing(select(Pepsi_data, :created_at, :tweet_id, :author_id, :sourcetweet_id))
-total_nodes = unique(string.(vcat(pepsi_short[!, :author_id], pepsi_short[!, :tweet_id], pepsi_short[!, :sourcetweet_id])))
-filter!(x -> x != "NA", total_nodes)
-m = Matrix(pepsi_short)
-
-am = spzeros(Bool, length(total_nodes), length(total_nodes))
-
-for i = 1:size(pepsi_short, 1)
-    if m[i,4] != "NA"
-        index1 = findfirst(==(string(m[i,3])), total_nodes)
-        am[index1, findfirst(==(string(m[i,4])), total_nodes)] = true
-    end
-end
-
-g = SimpleDiGraph(am)
-mg = MetaGraph(g)
-
-for i = 1:length(total_nodes)
-    set_prop!(mg, i, :id, total_nodes[i])
-end
-
-set_indexing_prop!(mg, :id)
-
-for i = 1:length(unique(pepsi_short[!, :author_id]))
-    set_prop!(mg, i, :type, "accountId")
-end
-
-for i = length(unique(pepsi_short[!, :author_id]))+1:length(total_nodes)
-    set_prop!(mg, i, :type, "tweetId")
-end
-
-for i = 1:size(pepsi_short, 1)
-    if pepsi_short[i,4] != "NA"
-        str = mg[string(pepsi_short[i,3]), :id]
-        dst = mg[string(pepsi_short[i,4]), :id]
-        if haskey(props(mg, str, dst), :datetimes)
-            #println(str, " ", dst)
-            set_prop!(mg, str, dst, :datetimes, push!(get_prop(mg, str, dst, :datetimes), ZonedDateTime(pepsi_short[i,1])))
-        else
-            set_prop!(mg, str, dst, :datetimes, [ZonedDateTime(pepsi_short[i,1])])
-        end
-        #println(get_prop(mg, str, dst, :datetimes))
-        #println(str, " ", dst)
-    end
-end
+g = generate_retweet_quote_graph(Pepsi_data)
 
 savegraph("reply_quote_graph.lgz", g)
 g = loadgraph("reply_quote_graph.lgz")
+
+mg = add_meta_retweet_quote_graph(Pepsi_data, g)
+
+slice_mg = take_slice(mg, Date(2017,4,3), dayofyear)
