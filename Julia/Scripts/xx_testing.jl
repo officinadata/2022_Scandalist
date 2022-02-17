@@ -23,6 +23,8 @@ using MetaGraphs
 
 Pepsi_data = "Data/pepsi.csv" |> read_tw_data
 
+Redcross_data = "Data/redcross.csv" |> read_tw_data
+
 everyone_pepsi = @chain Pepsi_data begin
     @subset(week.(:date) .== 16)
     get_all_username()
@@ -86,11 +88,32 @@ print(first(sort(c_df, :count, rev=true), 20))
 
 # ROUGH REPLY / QUOTES NETWORK TESTING
 
-g = generate_retweet_quote_graph(Pepsi_data)
+g = generate_reply_quote_graph(Redcross_data)
 
 savegraph("reply_quote_graph.lgz", g)
 g = loadgraph("reply_quote_graph.lgz")
 
-mg = add_meta_retweet_quote_graph(Pepsi_data, g)
+mg = add_meta_reply_quote_graph(Redcross_data, g)
 
-slice_mg = take_slice(mg, Date(2017,4,3), week)
+slice_mg = take_slice(mg, Date(2020,2,3), Date(2020,2,10))
+
+function graph_metric(x)
+    return mean(eigenvector_centrality(x))
+end
+
+plot_graph_metric(mg, graph_metric, Week(1), Date.(ZonedDateTime.(Redcross_data.created_at))[1], Date.(ZonedDateTime.(Redcross_data.created_at))[size(Redcross_data,1)])
+
+#User plot 
+
+user_info = groupby(select(Redcross_data, :user_username, :retweet_count, :like_count, :quote_count, :reply_count), :user_username)
+user_info = combine(user_info, nrow => :ntweets, :retweet_count => sum => :nretweets, :like_count => sum => :nlikes, :quote_count => sum => :nquotes, :reply_count => sum => :nreplies)
+
+user_info = sort(user_info, order(:nretweets, rev=true))
+
+x = collect(1:1:size(user_info, 1))
+y = user_info.nretweets
+users = data((; x, y)) *
+visual(Lines) *
+mapping(:x, :y)
+
+draw(users)
