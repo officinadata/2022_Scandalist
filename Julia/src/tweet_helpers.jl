@@ -125,7 +125,7 @@ A plot of retweets against quotes
 function generate_ratio_plot(twit_data::DataFrame)
     ratio_df = data(twit_data) *
         mapping(:quote_count => "N Quotes",:retweet_count => "N Retweets")
-    draw(ratio_df)
+    return draw(ratio_df)
 end
 
 
@@ -145,7 +145,7 @@ function generate_volume_by_plot(twit_data::DataFrame, date_func::Function)
         visual(Lines) *
         mapping(Symbol(date_func) => string(date_func), :n => "Number of posts")
 
-    draw(volume)
+    return draw(volume)
 end
 
 
@@ -165,7 +165,7 @@ function generate_cumulative_volume_by_plot(twit_data::DataFrame, date_func::Fun
         visual(Lines) *
         mapping(Symbol(date_func) => string(date_func), :n => "Cumulative number of posts")
 
-    draw(cumulative_volume)
+    return draw(cumulative_volume)
 end
 
 
@@ -185,7 +185,7 @@ function generate_avg_mentions_by_plot(twit_data::DataFrame, date_func::Function
         visual(Lines) *
         mapping(Symbol(date_func) => string(date_func), :nmentions => "Average number of mentions per tweet")
 
-    draw(mentions)
+    return draw(mentions)
 end
 
 
@@ -205,7 +205,7 @@ function generate_total_mentions_by_plot(twit_data::DataFrame, date_func::Functi
         visual(Lines) *
         mapping(Symbol(date_func) => string(date_func), :nmentions => "Total number of mentions")
 
-    draw(mentions)
+    return draw(mentions)
 end
 
 
@@ -226,7 +226,7 @@ function generate_avg_retweets_by_plot(twit_data::DataFrame, date_func::Function
         visual(Lines) *
         mapping(Symbol(date_func) => string(date_func), :nretweets => "Average number of retweets per tweet")
 
-    draw(mentions)
+    return draw(mentions)
 end
 
 
@@ -247,7 +247,7 @@ function generate_total_retweets_by_plot(twit_data::DataFrame, date_func::Functi
         visual(Lines) *
         mapping(Symbol(date_func) => string(date_func), :nretweets => "Total number of retweets")
 
-    draw(mentions)
+    return draw(mentions)
 end
 
 
@@ -268,7 +268,7 @@ function generate_avg_quotes_by_plot(twit_data::DataFrame, date_func::Function)
         visual(Lines) *
         mapping(Symbol(date_func) => string(date_func), :nquotes => "Average number of quotes per tweet")
 
-    draw(mentions)
+    return draw(mentions)
 end
 
 
@@ -289,5 +289,5 @@ function generate_total_quotes_by_plot(twit_data::DataFrame, date_func::Function
         visual(Lines) *
         mapping(Symbol(date_func) => string(date_func), :nquotes => "Total number of quotes")
 
-    draw(mentions)
+    return draw(mentions)
 end

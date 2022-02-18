@@ -23,7 +23,11 @@ using MetaGraphs
 
 Pepsi_data = "Data/pepsi.csv" |> read_tw_data
 
-Redcross_data = "Data/redcross.csv" |> read_tw_data
+Redcross_data = "Data/RedCrossAU.csv" |> read_tw_data
+
+mit_data = "Data/MIT2.csv" |> read_tw_data
+mit_data.created_at = Date.(ZonedDateTime.(mit_data.created_at))
+sort(mit_data, order(:created_at))
 
 everyone_pepsi = @chain Pepsi_data begin
     @subset(week.(:date) .== 16)
@@ -108,10 +112,10 @@ plot_graph_metric(mg, graph_metric, Week(1), Date.(ZonedDateTime.(Redcross_data.
 user_info = groupby(select(Redcross_data, :user_username, :retweet_count, :like_count, :quote_count, :reply_count), :user_username)
 user_info = combine(user_info, nrow => :ntweets, :retweet_count => sum => :nretweets, :like_count => sum => :nlikes, :quote_count => sum => :nquotes, :reply_count => sum => :nreplies)
 
-user_info = sort(user_info, order(:nretweets, rev=true))
+user_info = sort(user_info, order(:nretweets, rev=false))
 
-x = collect(1:1:size(user_info, 1))
-y = user_info.nretweets
+y = filter(x -> x > 100, user_info.nretweets)
+x = collect(1:1:size(y,1))
 users = data((; x, y)) *
 visual(Lines) *
 mapping(:x, :y)

@@ -103,7 +103,7 @@ function add_meta_reply_quote_graph(twit_df::DataFrame, g::SimpleDiGraph)::MetaD
     df_joined.true_id = String.(only.(df_joined.true_id))
     df_short = vcat(df_short, df_joined)
 
-    total_nodes = unique(String.(vcat(df_short[!, :author_id], df_short[!, :tweet_id], df_short[!, :true_id])))
+    total_nodes = unique(string.(vcat(df_short[!, :author_id], df_short[!, :tweet_id], df_short[!, :true_id])))
 
     mg = MetaDiGraph(g)
 
@@ -133,9 +133,9 @@ function add_meta_reply_quote_graph(twit_df::DataFrame, g::SimpleDiGraph)::MetaD
         str = mg[string(df_short[i,3]), :id]
         dst = mg[string(df_short[i,5]), :id]
         if haskey(props(mg, str, dst), :datetimes)
-            set_prop!(mg, str, dst, :datetimes, push!(get_prop(mg, str, dst, :datetimes), ZonedDateTime(df_short[i,1])))
+            set_prop!(mg, str, dst, :datetimes, push!(get_prop(mg, str, dst, :datetimes), df_short[i,1]))
         else
-            set_prop!(mg, str, dst, :datetimes, [ZonedDateTime(df_short[i,1])])
+            set_prop!(mg, str, dst, :datetimes, [df_short[i,1]])
         end
     end
 
@@ -159,7 +159,7 @@ property
 """
 function take_slice(mg::MetaDiGraph,sd::Date, ed::Date)::MetaDiGraph
     function slice_filter(g, e, sd, ed)
-        dates = Date.(get_prop(g, e, :datetimes))
+        dates = Date.(ZonedDateTime.(get_prop(g, e, :datetimes)))
         for date in dates
             if date >= sd && date <= ed
                 return true
@@ -197,14 +197,19 @@ function plot_graph_metric(mg, met, per, sd, ed, cum = true)
             sliced_mg = take_slice(mg, last_date, date)
             last_date = date
         end
-        append!(values, met(sliced_mg))
+        try
+            append!(values, met(sliced_mg))
+        catch
+            println("ERROR: Metric function failed on slice")
+            append!(values, NaN)
+        end
     end
 
     df_data = DataFrame(date = dates, n = values)
 
-    volume = data(df_data) *
+    plot = data(df_data) *
     visual(Lines) *
     mapping(:date => "Date", :n => Symbol(met))
 
-    draw(volume)        
+    return draw(plot)        
 end
