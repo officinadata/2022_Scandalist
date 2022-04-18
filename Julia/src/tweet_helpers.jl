@@ -291,3 +291,188 @@ function generate_total_quotes_by_plot(twit_data::DataFrame, date_func::Function
 
     return draw(mentions)
 end
+
+
+function get_unique_users(twit_data::DataFrame, date_func::Function)
+    users = @chain twit_data begin
+        @transform(:temp = date_func.(:date))
+        @by(:temp, :nusers = length(unique(:author_id)))
+    end
+
+    rename!(users, :temp => Symbol(date_func))
+
+    return users
+end
+
+
+function generate_unique_users(twit_data::DataFrame, date_func::Function)
+    df = get_unique_users(twit_data, date_func)
+    users = data(df) *
+        visual(Lines) *
+        mapping(Symbol(date_func) => string(date_func), :nusers => "N unique users")
+
+    return draw(users)
+end
+
+
+function get_quote_volume(twit_data::DataFrame, date_func::Function)
+    quotes = @chain twit_data begin
+        @transform(:temp = date_func.(:date))
+        @by(:temp, :nquotes = count(i -> (i=="quoted" || "quoted" in split(strip(i,['[', ']']),", ")), :sourcetweet_type))
+    end
+
+    rename!(quotes, :temp => Symbol(date_func))
+
+    return quotes
+end
+
+
+function generate_quote_volume(twit_data::DataFrame, date_func::Function)
+    df = get_quote_volume(twit_data, date_func)
+    quotes = data(df) *
+        visual(Lines) *
+        mapping(Symbol(date_func) => string(date_func), :nquotes => "N quote tweets")
+
+    return draw(quotes)
+end
+
+
+function get_retweet_volume(twit_data::DataFrame, date_func::Function)
+    df = @chain twit_data begin
+        @transform(:temp = date_func.(:date))
+        @by(:temp, :nretweets = count(i -> (i=="retweeted" || "retweeted" in split(strip(i,['[', ']']),", ")), :sourcetweet_type))
+    end
+
+    rename!(df, :temp => Symbol(date_func))
+
+    return df
+end
+
+
+function generate_retweet_volume(twit_data::DataFrame, date_func::Function)
+    df = get_retweet_volume(twit_data, date_func)
+    quotes = data(df) *
+        visual(Lines) *
+        mapping(Symbol(date_func) => string(date_func), :nretweets => "N quote tweets")
+
+    return draw(quotes)
+end
+
+function get_reply_volume(twit_data::DataFrame, date_func::Function)
+    df = @chain twit_data begin
+        @transform(:temp = date_func.(:date))
+        @by(:temp, :nreplies = count(i -> (i!="NA"), :in_reply_to_user_id))
+    end
+
+    rename!(df, :temp => Symbol(date_func))
+
+    return df
+end
+
+
+function generate_reply_volume(twit_data::DataFrame, date_func::Function)
+    df = get_reply_volume(twit_data, date_func)
+    quotes = data(df) *
+        visual(Lines) *
+        mapping(Symbol(date_func) => string(date_func), :nreplies => "N reply tweets")
+
+    return draw(quotes)
+end
+
+
+function get_unique_user_rate(twit_data::DataFrame, date_func::Function)
+    df = @chain twit_data begin
+        @transform(:temp1 = minute.(:date), :temp2 = hour.(:date), :temp3 = dayofyear.(:date))
+        @by([:temp1, :temp2, :temp3], :nunique = length(unique(:author_id)))
+        @by(:temp3, :nuniqueAvg = mean(:nunique))
+    end
+
+    rename!(df, :temp3 => Symbol(date_func))
+
+    return df
+end
+
+
+function generate_unique_user_rate(twit_data::DataFrame, date_func::Function)
+    df = get_unique_user_rate(twit_data, date_func)
+    quotes = data(df) *
+        visual(Lines) *
+        mapping(Symbol(date_func) => string(date_func), :nuniqueAvg => "Unique user tweet rate")
+
+    return draw(quotes)
+end
+
+
+function get_quote_rate(twit_data::DataFrame, date_func::Function)
+    is_quote(type) = type == "quoted" || "quoted" in split(strip(type,['[', ']']),", ")
+    twit_data = filter(:sourcetweet_type => is_quote, twit_data)
+    df = @chain twit_data begin
+        @transform(:temp1 = minute.(:date), :temp2 = hour.(:date), :temp3 = dayofyear.(:date))
+        @by([:temp1, :temp2, :temp3], :nunique = length(unique(:author_id)))
+        @by(:temp3, :nuniqueAvg = mean(:nunique))
+    end
+
+    rename!(df, :temp3 => Symbol(date_func))
+
+    return df
+end
+
+
+function generate_quote_rate(twit_data::DataFrame, date_func::Function)
+    df = get_quote_rate(twit_data, date_func)
+    quotes = data(df) *
+        visual(Lines) *
+        mapping(Symbol(date_func) => string(date_func), :nuniqueAvg => "Quote tweet rate")
+
+    return draw(quotes)
+end
+
+
+function get_retweet_rate(twit_data::DataFrame, date_func::Function)
+    is_retweet(type) = type == "retweeted" || "retweeted" in split(strip(type,['[', ']']),", ")
+    twit_data = filter(:sourcetweet_type => is_retweet, twit_data)
+    df = @chain twit_data begin
+        @transform(:temp1 = minute.(:date), :temp2 = hour.(:date), :temp3 = dayofyear.(:date))
+        @by([:temp1, :temp2, :temp3], :nunique = length(unique(:author_id)))
+        @by(:temp3, :nuniqueAvg = mean(:nunique))
+    end
+
+    rename!(df, :temp3 => Symbol(date_func))
+
+    return df
+end
+
+
+function generate_retweet_rate(twit_data::DataFrame, date_func::Function)
+    df = get_retweet_rate(twit_data, date_func)
+    retweets = data(df) *
+        visual(Lines) *
+        mapping(Symbol(date_func) => string(date_func), :nuniqueAvg => "Retweet rate")
+
+    return draw(retweets)
+end
+
+
+function get_reply_rate(twit_data::DataFrame, date_func::Function)
+    is_reply(type) = type != "NA"
+    twit_data = filter(:in_reply_to_user_id => is_reply, twit_data)
+    df = @chain twit_data begin
+        @transform(:temp1 = minute.(:date), :temp2 = hour.(:date), :temp3 = dayofyear.(:date))
+        @by([:temp1, :temp2, :temp3], :nunique = length(unique(:author_id)))
+        @by(:temp3, :nuniqueAvg = mean(:nunique))
+    end
+
+    rename!(df, :temp3 => Symbol(date_func))
+
+    return df
+end
+
+
+function generate_reply_rate(twit_data::DataFrame, date_func::Function)
+    df = get_reply_rate(twit_data, date_func)
+    replys = data(df) *
+        visual(Lines) *
+        mapping(Symbol(date_func) => string(date_func), :nuniqueAvg => "reply tweet rate")
+
+    return draw(replys)
+end

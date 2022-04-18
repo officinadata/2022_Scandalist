@@ -25,6 +25,17 @@ using MetaGraphs
 set_aog_theme!()
 
 
+df = read_files("Data")
+generate_unique_users(df[1], dayofyear) #Graph 1
+generate_quote_volume(df[1], dayofyear) #Graph 2
+generate_retweet_volume(df[1], dayofyear) #Graph 2
+generate_reply_volume(df[1], dayofyear) #Graph 2
+generate_unique_user_rate(df[1], dayofyear) #Graph 3
+generate_quote_rate(df[1], dayofyear) #Graph 4
+generate_retweet_rate(df[1], dayofyear) #Graph 4
+generate_reply_rate(df[1], dayofyear) #Graph 4
+
+
 function _plot_stats(df, date_func, dir)
     save(dir * "/volume.png", generate_volume_by_plot(df, date_func), px_per_unit = 3)
     save(dir * "/cumulative_volume.png", generate_cumulative_volume_by_plot(df, date_func), px_per_unit = 3)
@@ -83,5 +94,5 @@ function graph_metric(x)
 end
 
 functions = [graph_metric]
-gen_net_plots(functions, Day(3), true, "Plots")
-gen_stat_plots(week, "Plots")
+gen_net_plots(functions, Day(1), false, "Plots")
+gen_stat_plots(dayofyear, "Plots")
