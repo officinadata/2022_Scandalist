@@ -2,6 +2,7 @@ using Chain
 using DataFrames
 using DataFramesMeta
 using Dates
+using StatsBase
 
 
 """
@@ -125,7 +126,7 @@ A plot of retweets against quotes
 function generate_ratio_plot(twit_data::DataFrame)
     ratio_df = data(twit_data) *
         mapping(:quote_count => "N Quotes",:retweet_count => "N Retweets")
-    return draw(ratio_df)
+    return ratio_df
 end
 
 
@@ -145,7 +146,7 @@ function generate_volume_by_plot(twit_data::DataFrame, date_func::Function)
         visual(Lines) *
         mapping(Symbol(date_func) => string(date_func), :n => "Number of posts")
 
-    return draw(volume)
+    return volume
 end
 
 
@@ -165,7 +166,7 @@ function generate_cumulative_volume_by_plot(twit_data::DataFrame, date_func::Fun
         visual(Lines) *
         mapping(Symbol(date_func) => string(date_func), :n => "Cumulative number of posts")
 
-    return draw(cumulative_volume)
+    return cumulative_volume
 end
 
 
@@ -185,7 +186,7 @@ function generate_avg_mentions_by_plot(twit_data::DataFrame, date_func::Function
         visual(Lines) *
         mapping(Symbol(date_func) => string(date_func), :nmentions => "Average number of mentions per tweet")
 
-    return draw(mentions)
+    return mentions
 end
 
 
@@ -205,7 +206,7 @@ function generate_total_mentions_by_plot(twit_data::DataFrame, date_func::Functi
         visual(Lines) *
         mapping(Symbol(date_func) => string(date_func), :nmentions => "Total number of mentions")
 
-    return draw(mentions)
+    return mentions
 end
 
 
@@ -226,7 +227,7 @@ function generate_avg_retweets_by_plot(twit_data::DataFrame, date_func::Function
         visual(Lines) *
         mapping(Symbol(date_func) => string(date_func), :nretweets => "Average number of retweets per tweet")
 
-    return draw(mentions)
+    return mentions
 end
 
 
@@ -247,7 +248,7 @@ function generate_total_retweets_by_plot(twit_data::DataFrame, date_func::Functi
         visual(Lines) *
         mapping(Symbol(date_func) => string(date_func), :nretweets => "Total number of retweets")
 
-    return draw(mentions)
+    return mentions
 end
 
 
@@ -268,7 +269,7 @@ function generate_avg_quotes_by_plot(twit_data::DataFrame, date_func::Function)
         visual(Lines) *
         mapping(Symbol(date_func) => string(date_func), :nquotes => "Average number of quotes per tweet")
 
-    return draw(mentions)
+    return mentions
 end
 
 
@@ -289,7 +290,7 @@ function generate_total_quotes_by_plot(twit_data::DataFrame, date_func::Function
         visual(Lines) *
         mapping(Symbol(date_func) => string(date_func), :nquotes => "Total number of quotes")
 
-    return draw(mentions)
+    return mentions
 end
 
 
@@ -311,7 +312,7 @@ function generate_unique_users(twit_data::DataFrame, date_func::Function)
         visual(Lines) *
         mapping(Symbol(date_func) => string(date_func), :nusers => "N unique users")
 
-    return draw(users)
+    return users
 end
 
 
@@ -333,7 +334,7 @@ function generate_quote_volume(twit_data::DataFrame, date_func::Function)
         visual(Lines) *
         mapping(Symbol(date_func) => string(date_func), :nquotes => "N quote tweets")
 
-    return draw(quotes)
+    return quotes
 end
 
 
@@ -355,7 +356,7 @@ function generate_retweet_volume(twit_data::DataFrame, date_func::Function)
         visual(Lines) *
         mapping(Symbol(date_func) => string(date_func), :nretweets => "N quote tweets")
 
-    return draw(quotes)
+    return quotes
 end
 
 function get_reply_volume(twit_data::DataFrame, date_func::Function)
@@ -376,7 +377,7 @@ function generate_reply_volume(twit_data::DataFrame, date_func::Function)
         visual(Lines) *
         mapping(Symbol(date_func) => string(date_func), :nreplies => "N reply tweets")
 
-    return draw(quotes)
+    return quotes
 end
 
 
@@ -399,7 +400,7 @@ function generate_unique_user_rate(twit_data::DataFrame, date_func::Function)
         visual(Lines) *
         mapping(Symbol(date_func) => string(date_func), :nuniqueAvg => "Unique user tweet rate")
 
-    return draw(quotes)
+    return quotes
 end
 
 
@@ -424,7 +425,7 @@ function generate_quote_rate(twit_data::DataFrame, date_func::Function)
         visual(Lines) *
         mapping(Symbol(date_func) => string(date_func), :nuniqueAvg => "Quote tweet rate")
 
-    return draw(quotes)
+    return quotes
 end
 
 
@@ -449,7 +450,7 @@ function generate_retweet_rate(twit_data::DataFrame, date_func::Function)
         visual(Lines) *
         mapping(Symbol(date_func) => string(date_func), :nuniqueAvg => "Retweet rate")
 
-    return draw(retweets)
+    return retweets
 end
 
 
@@ -474,5 +475,129 @@ function generate_reply_rate(twit_data::DataFrame, date_func::Function)
         visual(Lines) *
         mapping(Symbol(date_func) => string(date_func), :nuniqueAvg => "reply tweet rate")
 
-    return draw(replys)
+    return replys
+end
+
+
+function get_quote_rate_2(twit_data::DataFrame, date_func::Function)
+    df = get_quote_volume(twit_data, date_func)
+    df = @chain df begin
+        @transform(:nquotes = :nquotes/1440)
+    end
+    return df
+end
+
+
+function generate_quote_rate_2(twit_data::DataFrame, date_func::Function)
+    df = get_quote_rate_2(twit_data, date_func)
+    replys = data(df) *
+        visual(Lines) *
+        mapping(Symbol(date_func) => string(date_func), :nquotes => "quote tweet rate")
+
+    return replys
+end
+
+
+function get_retweet_rate_2(twit_data::DataFrame, date_func::Function)
+    df = get_retweet_volume(twit_data, date_func)
+    df = @chain df begin
+        @transform(:nretweets = :nretweets/1440)
+    end
+    return df
+end
+
+
+function generate_retweet_rate_2(twit_data::DataFrame, date_func::Function)
+    df = get_retweet_rate_2(twit_data, date_func)
+    replys = data(df) *
+        visual(Lines) *
+        mapping(Symbol(date_func) => string(date_func), :nretweets => "retweet rate")
+
+    return replys
+end
+
+
+function get_reply_rate_2(twit_data::DataFrame, date_func::Function)
+    df = get_reply_volume(twit_data, date_func)
+    df = @chain df begin
+        @transform(:nreplys = :nreplys/1440)
+    end
+    return df
+end
+
+
+function generate_reply_rate_2(twit_data::DataFrame, date_func::Function)
+    df = get_reply_rate_2(twit_data, date_func)
+    replys = data(df) *
+        visual(Lines) *
+        mapping(Symbol(date_func) => string(date_func), :nreplys => "reply rate")
+
+    return replys
+end
+
+
+function get_cum_quote_volume(twit_data::DataFrame, date_func::Function)
+    df = get_quote_volume(twit_data, date_func)
+    df = @transform(df, :n = cumsum(:nquotes))
+    return df
+end
+
+
+function generate_cum_quote_volume(twit_data::DataFrame, date_func::Function)
+    cumulative_volume = data(get_cum_quote_volume(twit_data, date_func)) *
+        visual(Lines) *
+        mapping(Symbol(date_func) => string(date_func), :n => "Cumulative number of quote tweets")
+
+    return cumulative_volume
+end
+
+
+function get_cum_retweet_volume(twit_data::DataFrame, date_func::Function)
+    df = get_retweet_volume(twit_data, date_func)
+    df = @transform(df, :n = cumsum(:nretweets))
+    return df
+end
+
+
+function generate_cum_retweet_volume(twit_data::DataFrame, date_func::Function)
+    cumulative_volume = data(get_cum_retweet_volume(twit_data, date_func)) *
+        visual(Lines) *
+        mapping(Symbol(date_func) => string(date_func), :n => "Cumulative number of retweets")
+
+    return cumulative_volume
+end
+
+
+function get_cum_reply_volume(twit_data::DataFrame, date_func::Function)
+    df = get_reply_volume(twit_data, date_func)
+    df = @transform(df, :n = cumsum(:nreplies))
+    return df
+end
+
+
+function generate_cum_reply_volume(twit_data::DataFrame, date_func::Function)
+    cumulative_volume = data(get_cum_reply_volume(twit_data, date_func)) *
+        visual(Lines) *
+        mapping(Symbol(date_func) => string(date_func), :n => "Cumulative number of replies")
+
+    return cumulative_volume
+end
+
+
+function wrap_in_makie(out_of_AoG, annotations)
+    fig = Figure()
+    ax1 = Axis(fig[1,1],
+        ylabel = annotations[1],
+        xlabel = annotations[2],
+        title = annotations[3]
+        )
+     
+    mean_data = mean(out_of_AoG.data[2])
+    mad_data = mad(out_of_AoG.data[2])
+    
+    draw!(ax1, out_of_AoG)
+    hlines!(ax1, mean_data)
+    hspan!(ax1, mean_data-mad_data , mean_data+mad_data, color = (:blue, 0.2))
+    
+    return fig
 end

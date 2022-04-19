@@ -20,6 +20,7 @@ using Graphs
 using SparseArrays
 using DataStructures
 using MetaGraphs
+using GraphPlot
 
 
 set_aog_theme!()
@@ -34,6 +35,18 @@ generate_unique_user_rate(df[1], dayofyear) #Graph 3
 generate_quote_rate(df[1], dayofyear) #Graph 4
 generate_retweet_rate(df[1], dayofyear) #Graph 4
 generate_reply_rate(df[1], dayofyear) #Graph 4
+
+get_quote_volume(df[1], dayofyear)
+get_quote_rate_2(df[1], dayofyear)
+generate_quote_rate_2(df[1], dayofyear)
+
+wrap_in_makie(generate_unique_users(df[1], dayofyear), ["x", "y", "title"])
+
+draw(generate_cum_reply_volume(df[1], dayofyear))
+
+
+g = generate_reply_quote_graph(df[1])
+
 
 
 function _plot_stats(df, date_func, dir)
