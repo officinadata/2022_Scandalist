@@ -61,7 +61,7 @@ number of quotes and retweets
 function get_interactions_by(twit_data::DataFrame, date_func::Function, manip_func::Function = mean)
     interactions = @chain twit_data begin
         @transform(:temp = date_func.(:date))
-        @by(:temp, :nquotes = manip_func(:quote_count), :nretweets = manip_func(:retweet_count))
+        @by(:temp, :nquotes = manip_func(:quote_count), :nretweets = manip_func(:retweet_count), :nreplies = manip_func(:reply_count))
     end
 
     rename!(interactions, :temp => Symbol(date_func))
@@ -329,7 +329,7 @@ end
 
 
 function generate_quote_volume(twit_data::DataFrame, date_func::Function)
-    df = get_quote_volume(twit_data, date_func)
+    df = select(get_interactions_by(twit_data, date_func, sum), Not(:nretweets), Not(:nreplies)) 
     quotes = data(df) *
         visual(Lines) *
         mapping(Symbol(date_func) => string(date_func), :nquotes => "N quote tweets")
@@ -351,7 +351,7 @@ end
 
 
 function generate_retweet_volume(twit_data::DataFrame, date_func::Function)
-    df = get_retweet_volume(twit_data, date_func)
+    df = select(get_interactions_by(twit_data, date_func, sum), Not(:nquotes), Not(:nreplies))
     quotes = data(df) *
         visual(Lines) *
         mapping(Symbol(date_func) => string(date_func), :nretweets => "N quote tweets")
@@ -372,7 +372,7 @@ end
 
 
 function generate_reply_volume(twit_data::DataFrame, date_func::Function)
-    df = get_reply_volume(twit_data, date_func)
+    df = select(get_interactions_by(twit_data, date_func, sum), Not(:nretweets), Not(:nquotes))
     quotes = data(df) *
         visual(Lines) *
         mapping(Symbol(date_func) => string(date_func), :nreplies => "N reply tweets")
@@ -480,7 +480,7 @@ end
 
 
 function get_quote_rate_2(twit_data::DataFrame, date_func::Function)
-    df = get_quote_volume(twit_data, date_func)
+    df = select(get_interactions_by(twit_data, date_func, sum), Not(:nretweets), Not(:nreplies))
     df = @chain df begin
         @transform(:nquotes = :nquotes/1440)
     end
@@ -499,7 +499,7 @@ end
 
 
 function get_retweet_rate_2(twit_data::DataFrame, date_func::Function)
-    df = get_retweet_volume(twit_data, date_func)
+    df = select(get_interactions_by(twit_data, date_func, sum), Not(:nquotes), Not(:nreplies))
     df = @chain df begin
         @transform(:nretweets = :nretweets/1440)
     end
@@ -518,9 +518,9 @@ end
 
 
 function get_reply_rate_2(twit_data::DataFrame, date_func::Function)
-    df = get_reply_volume(twit_data, date_func)
+    df = select(get_interactions_by(twit_data, date_func, sum), Not(:nretweets), Not(:nquotes))
     df = @chain df begin
-        @transform(:nreplys = :nreplys/1440)
+        @transform(:nreplys = :nreplies/1440)
     end
     return df
 end
@@ -530,14 +530,14 @@ function generate_reply_rate_2(twit_data::DataFrame, date_func::Function)
     df = get_reply_rate_2(twit_data, date_func)
     replys = data(df) *
         visual(Lines) *
-        mapping(Symbol(date_func) => string(date_func), :nreplys => "reply rate")
+        mapping(Symbol(date_func) => string(date_func), :nreplies => "reply rate")
 
     return replys
 end
 
 
 function get_cum_quote_volume(twit_data::DataFrame, date_func::Function)
-    df = get_quote_volume(twit_data, date_func)
+    df = select(get_interactions_by(twit_data, date_func, sum), Not(:nretweets), Not(:nreplies))
     df = @transform(df, :n = cumsum(:nquotes))
     return df
 end
@@ -553,7 +553,7 @@ end
 
 
 function get_cum_retweet_volume(twit_data::DataFrame, date_func::Function)
-    df = get_retweet_volume(twit_data, date_func)
+    df = select(get_interactions_by(twit_data, date_func, sum), Not(:nquotes), Not(:nreplies))
     df = @transform(df, :n = cumsum(:nretweets))
     return df
 end
@@ -569,7 +569,7 @@ end
 
 
 function get_cum_reply_volume(twit_data::DataFrame, date_func::Function)
-    df = get_reply_volume(twit_data, date_func)
+    df = select(get_interactions_by(twit_data, date_func, sum), Not(:nretweets), Not(:nquotes))
     df = @transform(df, :n = cumsum(:nreplies))
     return df
 end
@@ -584,20 +584,66 @@ function generate_cum_reply_volume(twit_data::DataFrame, date_func::Function)
 end
 
 
-function wrap_in_makie(out_of_AoG, annotations)
-    fig = Figure()
+function wrap_in_makie(out_of_AoG, annotations, use_mad = false, fig = Figure())
     ax1 = Axis(fig[1,1],
-        ylabel = annotations[1],
-        xlabel = annotations[2],
+        xlabel = annotations[1],
+        ylabel = annotations[2],
         title = annotations[3]
         )
-     
-    mean_data = mean(out_of_AoG.data[2])
-    mad_data = mad(out_of_AoG.data[2])
-    
+
     draw!(ax1, out_of_AoG)
-    hlines!(ax1, mean_data)
-    hspan!(ax1, mean_data-mad_data , mean_data+mad_data, color = (:blue, 0.2))
+
+    if use_mad
+        mean_data = mean(out_of_AoG.data[2])
+        mad_data = mad(out_of_AoG.data[2])
+        
+        hlines!(ax1, mean_data)
+        hspan!(ax1, mean_data-mad_data , mean_data+mad_data, color = (:blue, 0.2))
+    end
+    
+    return fig
+end
+
+
+function cumulative_sorting(df, column)
+    @chain df begin
+        @subset(:true_type .!= "retweeted")
+        groupby(:author_id)
+        combine(column => sum => :tot)
+        @orderby(-:tot)
+        @transform(_,
+        :cumulative = cumsum(:tot),
+        :rownumber = rownumber.(eachrow(_)))
+    end
+end
+
+
+function graph2(df, date_func)
+    fig = Figure()
+
+    g1 = wrap_in_makie(generate_quote_volume(df, date_func), ["Day of year", "N quotes", "Daily quote volume"], false, fig[1,1])
+    g2 = wrap_in_makie(generate_retweet_volume(df, date_func), ["Day of year", "N retweets", "Daily retweet volume"], false, fig[1,2])
+    g3 = wrap_in_makie(generate_reply_volume(df, date_func), ["Day of year", "N replies", "Daily reply volume"], false, fig[2,1])
+    
+    return fig
+end
+
+
+function graph4(df, date_func)
+    fig = Figure()
+    g1 = wrap_in_makie(generate_quote_rate_2(df, date_func), ["Day of year", "Avg n quotes per min", "Daily quote rate"], true, fig[1,1])
+    g2 = wrap_in_makie(generate_retweet_rate_2(df, date_func), ["Day of year", "Avg n retweets per min", "Daily retweet rate"], true, fig[1,2])
+    g3 = wrap_in_makie(generate_reply_rate_2(df, date_func), ["Day of year", "Avg n replies per min", "Daily reply rate"], true, fig[2,1])
+    
+    return fig
+end
+
+
+function graph5(df, date_func)
+    fig = Figure()
+    g1 = wrap_in_makie(generate_cum_quote_volume(df, date_func), ["Day of year", "Cumulative n quotes", "Daily quote volume"], false, fig[1,1])
+    g2 = wrap_in_makie(generate_cum_retweet_volume(df, date_func), ["Day of year", "Cumulative n retweets", "Daily retweet volume"], false, fig[1,2])
+    g3 = wrap_in_makie(generate_cum_reply_volume(df, date_func), ["Day of year", "Cumulative n replies", "Daily reply volume"], false, fig[2,1])
     
     return fig
 end

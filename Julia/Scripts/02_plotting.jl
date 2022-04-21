@@ -26,38 +26,12 @@ using GraphPlot
 set_aog_theme!()
 
 
-df = read_files("Data")
-generate_unique_users(df[1], dayofyear) #Graph 1
-generate_quote_volume(df[1], dayofyear) #Graph 2
-generate_retweet_volume(df[1], dayofyear) #Graph 2
-generate_reply_volume(df[1], dayofyear) #Graph 2
-generate_unique_user_rate(df[1], dayofyear) #Graph 3
-generate_quote_rate(df[1], dayofyear) #Graph 4
-generate_retweet_rate(df[1], dayofyear) #Graph 4
-generate_reply_rate(df[1], dayofyear) #Graph 4
-
-get_quote_volume(df[1], dayofyear)
-get_quote_rate_2(df[1], dayofyear)
-generate_quote_rate_2(df[1], dayofyear)
-
-wrap_in_makie(generate_unique_users(df[1], dayofyear), ["x", "y", "title"])
-
-draw(generate_cum_reply_volume(df[1], dayofyear))
-
-
-g = generate_reply_quote_graph(df[1])
-
-
-
 function _plot_stats(df, date_func, dir)
-    save(dir * "/volume.png", generate_volume_by_plot(df, date_func), px_per_unit = 3)
-    save(dir * "/cumulative_volume.png", generate_cumulative_volume_by_plot(df, date_func), px_per_unit = 3)
-    save(dir * "/avg_mentions.png", generate_avg_mentions_by_plot(df, date_func), px_per_unit = 3)
-    save(dir * "/total_mentions.png", generate_total_mentions_by_plot(df, date_func), px_per_unit = 3)
-    save(dir * "/avg_retweets.png", generate_avg_retweets_by_plot(df, date_func), px_per_unit = 3)
-    save(dir * "/total_retweets.png", generate_total_retweets_by_plot(df, date_func), px_per_unit = 3)
-    save(dir * "/avg_quotes.png", generate_avg_quotes_by_plot(df, date_func), px_per_unit = 3)
-    save(dir * "/total_quotes.png", generate_total_quotes_by_plot(df, date_func), px_per_unit = 3)
+    save(dir * "/graph1.png", wrap_in_makie(generate_unique_users(df, date_func), ["Day of year", "N unique users", "Daily unique users"]), px_per_unit = 3)
+    save(dir * "/graph2.png", graph2(df, date_func), px_per_unit = 3)
+    save(dir * "/graph3.png", wrap_in_makie(generate_unique_user_rate(df, dayofyear), ["Day of year", "N unique users per min", "Daily unique user rate"], true), px_per_unit = 3)
+    save(dir * "/graph4.png", graph4(df, date_func), px_per_unit = 3)
+    save(dir * "/graph5.png", graph5(df, date_func), px_per_unit = 3)
 end
 
 
