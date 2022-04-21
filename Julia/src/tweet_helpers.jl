@@ -222,7 +222,7 @@ of the average number of retweets per tweet grouped by the date manipulation fun
 A plot of average retweets by date function grouping
 """
 function generate_avg_retweets_by_plot(twit_data::DataFrame, date_func::Function)
-    df = select(get_interactions_by(twit_data, date_func, mean), Not(:nquotes))
+    df = select(get_interactions_by(twit_data, date_func, mean), Symbol(date_func), :nretweets)
     mentions = data(df) *
         visual(Lines) *
         mapping(Symbol(date_func) => string(date_func), :nretweets => "Average number of retweets per tweet")
@@ -243,7 +243,7 @@ of the total number of grouped by the date manipulation function
 A plot of total retweets by date function grouping
 """
 function generate_total_retweets_by_plot(twit_data::DataFrame, date_func::Function)
-    df = select(get_interactions_by(twit_data, date_func, sum), Not(:nquotes))
+    df = select(get_interactions_by(twit_data, date_func, sum), Symbol(date_func), :nretweets)
     mentions = data(df) *
         visual(Lines) *
         mapping(Symbol(date_func) => string(date_func), :nretweets => "Total number of retweets")
@@ -264,7 +264,7 @@ of the average number of quotes per tweet grouped by the date manipulation funct
 A plot of average quote tweets by date function grouping
 """
 function generate_avg_quotes_by_plot(twit_data::DataFrame, date_func::Function)
-    df = select(get_interactions_by(twit_data, date_func, mean), Not(:nretweets))
+    df = select(get_interactions_by(twit_data, date_func, mean), Symbol(date_func), :nquotes)
     mentions = data(df) *
         visual(Lines) *
         mapping(Symbol(date_func) => string(date_func), :nquotes => "Average number of quotes per tweet")
@@ -285,7 +285,7 @@ of the total number of quotes grouped by the date manipulation function
 A plot of total quote tweets by date function grouping
 """
 function generate_total_quotes_by_plot(twit_data::DataFrame, date_func::Function)
-    df = select(get_interactions_by(twit_data, date_func, sum), Not(:nretweets))
+    df = select(get_interactions_by(twit_data, date_func, sum), Symbol(date_func), :nquotes)
     mentions = data(df) *
         visual(Lines) *
         mapping(Symbol(date_func) => string(date_func), :nquotes => "Total number of quotes")
@@ -329,7 +329,7 @@ end
 
 
 function generate_quote_volume(twit_data::DataFrame, date_func::Function)
-    df = select(get_interactions_by(twit_data, date_func, sum), Not(:nretweets), Not(:nreplies)) 
+    df = select(get_interactions_by(twit_data, date_func, sum), Symbol(date_func), :nquotes) 
     quotes = data(df) *
         visual(Lines) *
         mapping(Symbol(date_func) => string(date_func), :nquotes => "N quote tweets")
@@ -351,7 +351,7 @@ end
 
 
 function generate_retweet_volume(twit_data::DataFrame, date_func::Function)
-    df = select(get_interactions_by(twit_data, date_func, sum), Not(:nquotes), Not(:nreplies))
+    df = select(get_interactions_by(twit_data, date_func, sum), Symbol(date_func), :nretweets)
     quotes = data(df) *
         visual(Lines) *
         mapping(Symbol(date_func) => string(date_func), :nretweets => "N quote tweets")
@@ -372,7 +372,7 @@ end
 
 
 function generate_reply_volume(twit_data::DataFrame, date_func::Function)
-    df = select(get_interactions_by(twit_data, date_func, sum), Not(:nretweets), Not(:nquotes))
+    df = select(get_interactions_by(twit_data, date_func, sum), Symbol(date_func), :nreplies)
     quotes = data(df) *
         visual(Lines) *
         mapping(Symbol(date_func) => string(date_func), :nreplies => "N reply tweets")
@@ -480,7 +480,7 @@ end
 
 
 function get_quote_rate_2(twit_data::DataFrame, date_func::Function)
-    df = select(get_interactions_by(twit_data, date_func, sum), Not(:nretweets), Not(:nreplies))
+    df = select(get_interactions_by(twit_data, date_func, sum), Symbol(date_func), :nquotes)
     df = @chain df begin
         @transform(:nquotes = :nquotes/1440)
     end
@@ -499,7 +499,7 @@ end
 
 
 function get_retweet_rate_2(twit_data::DataFrame, date_func::Function)
-    df = select(get_interactions_by(twit_data, date_func, sum), Not(:nquotes), Not(:nreplies))
+    df = select(get_interactions_by(twit_data, date_func, sum), Symbol(date_func), :nretweets)
     df = @chain df begin
         @transform(:nretweets = :nretweets/1440)
     end
@@ -518,10 +518,11 @@ end
 
 
 function get_reply_rate_2(twit_data::DataFrame, date_func::Function)
-    df = select(get_interactions_by(twit_data, date_func, sum), Not(:nretweets), Not(:nquotes))
+    df = select(get_interactions_by(twit_data, date_func, sum), Symbol(date_func), :nreplies)
     df = @chain df begin
-        @transform(:nreplys = :nreplies/1440)
+        @transform(:nreplies = :nreplies/1440)
     end
+    print(df)
     return df
 end
 
@@ -537,7 +538,7 @@ end
 
 
 function get_cum_quote_volume(twit_data::DataFrame, date_func::Function)
-    df = select(get_interactions_by(twit_data, date_func, sum), Not(:nretweets), Not(:nreplies))
+    df = select(get_interactions_by(twit_data, date_func, sum), Symbol(date_func), :nquotes)
     df = @transform(df, :n = cumsum(:nquotes))
     return df
 end
@@ -553,7 +554,7 @@ end
 
 
 function get_cum_retweet_volume(twit_data::DataFrame, date_func::Function)
-    df = select(get_interactions_by(twit_data, date_func, sum), Not(:nquotes), Not(:nreplies))
+    df = select(get_interactions_by(twit_data, date_func, sum), Symbol(date_func), :nretweets)
     df = @transform(df, :n = cumsum(:nretweets))
     return df
 end
@@ -569,7 +570,7 @@ end
 
 
 function get_cum_reply_volume(twit_data::DataFrame, date_func::Function)
-    df = select(get_interactions_by(twit_data, date_func, sum), Not(:nretweets), Not(:nquotes))
+    df = select(get_interactions_by(twit_data, date_func, sum), Symbol(date_func), :nreplies)
     df = @transform(df, :n = cumsum(:nreplies))
     return df
 end

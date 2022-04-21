@@ -82,4 +82,5 @@ end
 
 functions = [graph_metric]
 gen_net_plots(functions, Day(1), false, "Plots")
+
 gen_stat_plots(dayofyear, "Plots")
