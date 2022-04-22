@@ -69,15 +69,6 @@ function get_column_summary(twit_data::DataFrame, column::Symbol, date_func::Fun
 end
 
 
-function get_tweet_rate(twit_data::DataFrame, column::Symbol, date_func::Function, manip_function::Function = sum)
-    df = get_column_summary(twit_data, column, date_func, manip_function)
-    df = @chain df begin
-        @transform(:y = :y/1440)
-    end
-    return df
-end
-
-
 function plot_graph(data::DataFrame, annotations, add_mad::Bool = false, f = Figure())
     aog = make_aog_graph(data)
     fig = wrap_in_makie(aog, annotations, add_mad, f)

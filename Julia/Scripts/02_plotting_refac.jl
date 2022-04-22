@@ -29,9 +29,12 @@ set_aog_theme!()
 function graph2(df, date_func)
     fig = Figure()
 
-    g1 = plot_graph(get_column_summary(df, :quote_count, date_func, sum), ["Day of year", "N quotes", "Daily quote volume"], false, fig[1,1])
-    g2 = plot_graph(get_column_summary(df, :retweet_count, date_func, sum), ["Day of year", "N retweets", "Daily retweet volume"], false, fig[1,2])
-    g3 = plot_graph(get_column_summary(df, :reply_count, date_func, sum), ["Day of year", "N replies", "Daily reply volume"], false, fig[2,1])
+    g1 = plot_graph(get_column_summary(df, :quote_count, date_func, sum), 
+        ["Day of year", "N quotes", "Daily quote volume"], false, fig[1,1])
+    g2 = plot_graph(get_column_summary(df, :retweet_count, date_func, sum), 
+        ["Day of year", "N retweets", "Daily retweet volume"], false, fig[1,2])
+    g3 = plot_graph(get_column_summary(df, :reply_count, date_func, sum), 
+        ["Day of year", "N replies", "Daily reply volume"], false, fig[2,1])
     
     return fig
 end
@@ -40,9 +43,12 @@ end
 function graph4(df, date_func)
     fig = Figure()
 
-    g1 = plot_graph(get_tweet_rate(df, :quote_count, date_func, sum), ["Day of year", "Avg n quotes per min", "Daily quote rate"], true, fig[1,1])
-    g2 = plot_graph(get_tweet_rate(df, :retweet_count, date_func, sum), ["Day of year", "Avg n retweets per min", "Daily retweet rate"], true, fig[1,2])
-    g3 = plot_graph(get_tweet_rate(df, :reply_count, date_func, sum), ["Day of year", "Avg n replies per min", "Daily reply rate"], true, fig[2,1])
+    g1 = plot_graph(@transform(get_column_summary(df, :quote_count, date_func, sum), :y = :y/1440), 
+        ["Day of year", "Avg n quotes per min", "Daily quote rate"], true, fig[1,1])
+    g2 = plot_graph(@transform(get_column_summary(df, :retweet_count, date_func, sum), :y = :y/1440), 
+        ["Day of year", "Avg n retweets per min", "Daily retweet rate"], true, fig[1,2])
+    g3 = plot_graph(@transform(get_column_summary(df, :reply_count, date_func, sum), :y = :y/1440), 
+        ["Day of year", "Avg n replies per min", "Daily reply rate"], true, fig[2,1])
  
     return fig
 end
@@ -51,9 +57,12 @@ end
 function graph5(df, date_func)
     fig = Figure()
 
-    g1 = plot_graph(@transform(get_column_summary(df, :quote_count, date_func, sum), :y = cumsum(:y)), ["Day of year", "Cumulative n quotes", "Daily quote volume"], false, fig[1,1])
-    g2 = plot_graph(@transform(get_column_summary(df, :retweet_count, date_func, sum), :y = cumsum(:y)), ["Day of year", "Cumulative n retweets", "Daily retweet volume"], false, fig[1,2])
-    g3 = plot_graph(@transform(get_column_summary(df, :reply_count, date_func, sum), :y = cumsum(:y)), ["Day of year", "Cumulative n replies", "Daily reply volume"], false, fig[2,1])
+    g1 = plot_graph(@transform(get_column_summary(df, :quote_count, date_func, sum), :y = cumsum(:y)), 
+        ["Day of year", "Cumulative n quotes", "Daily quote volume"], false, fig[1,1])
+    g2 = plot_graph(@transform(get_column_summary(df, :retweet_count, date_func, sum), :y = cumsum(:y)), 
+        ["Day of year", "Cumulative n retweets", "Daily retweet volume"], false, fig[1,2])
+    g3 = plot_graph(@transform(get_column_summary(df, :reply_count, date_func, sum), :y = cumsum(:y)), 
+        ["Day of year", "Cumulative n replies", "Daily reply volume"], false, fig[2,1])
     
     return fig
 end
