@@ -58,15 +58,18 @@ end
 
 
 function cumulative_sorting(df,column)
-    @chain df begin
+    df = @chain df begin
         @subset(:true_type .!= "retweeted")
         groupby(:author_id)
         combine(column => sum => :tot)
-        @orderby(-:tot)
+        @orderby(:tot)
         @transform(_,
         :cumulative = cumsum(:tot),
         :rownumber = rownumber.(eachrow(_)))
+        @select :cumulative :rownumber
+        rename(:rownumber => :x, :cumulative => :y)
     end
+    println(names(df))
     return df
 end
     

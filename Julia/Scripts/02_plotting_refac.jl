@@ -58,11 +58,11 @@ function graph5(df, date_func)
     fig = Figure()
 
     g1 = plot_graph(cumulative_sorting(df, :quote_count), 
-        ["Day of year", "Cumulative n quotes", "Unique authors"], false, fig[1,1])
+        ["Author", "Cumulative n quotes", "Cumulative quotes by author"], false, fig[1,1])
     g2 = plot_graph(cumulative_sorting(df, :retweet_count),
-        ["Day of year", "Cumulative n retweets", "Unique authors"], false, fig[1,2])
+        ["Author", "Cumulative n retweets", "Cumulative retweets by author"], false, fig[1,2])
     g3 = plot_graph(cumulative_sorting(df, :reply_count),
-        ["Day of year", "Cumulative n replies", "Unique authors"], false, fig[2,1])
+        ["Author", "Cumulative n replies", "Cumulative replies by author"], false, fig[2,1])
     
     return fig
 end
@@ -78,7 +78,7 @@ end
 
 
 function gen_stat_plots(date_func, out_dir)
-    dfs = read_files("Data")
+    dfs = [read_files("Data")[1]]
     scandals = read_names("Data")
 
     for s in scandals
@@ -123,6 +123,6 @@ function graph_metric(x)
 end
 
 functions = [graph_metric]
-#gen_net_plots(functions, Day(1), false, "Plots2")
+gen_net_plots(functions, Day(1), false, "Plots2")
 
 gen_stat_plots(dayofyear, "Plots2")
