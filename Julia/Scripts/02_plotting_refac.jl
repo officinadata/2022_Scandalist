@@ -57,12 +57,12 @@ end
 function graph5(df, date_func)
     fig = Figure()
 
-    g1 = plot_graph(@transform(get_column_summary(df, :quote_count, date_func, sum), :y = cumsum(:y)), 
-        ["Day of year", "Cumulative n quotes", "Daily quote volume"], false, fig[1,1])
-    g2 = plot_graph(@transform(get_column_summary(df, :retweet_count, date_func, sum), :y = cumsum(:y)), 
-        ["Day of year", "Cumulative n retweets", "Daily retweet volume"], false, fig[1,2])
-    g3 = plot_graph(@transform(get_column_summary(df, :reply_count, date_func, sum), :y = cumsum(:y)), 
-        ["Day of year", "Cumulative n replies", "Daily reply volume"], false, fig[2,1])
+    g1 = plot_graph(cumulative_sorting(df, :quote_count), 
+        ["Day of year", "Cumulative n quotes", "Unique authors"], false, fig[1,1])
+    g2 = plot_graph(cumulative_sorting(df, :retweet_count),
+        ["Day of year", "Cumulative n retweets", "Unique authors"], false, fig[1,2])
+    g3 = plot_graph(cumulative_sorting(df, :reply_count),
+        ["Day of year", "Cumulative n replies", "Unique authors"], false, fig[2,1])
     
     return fig
 end
@@ -71,7 +71,7 @@ end
 function _plot_stats(df, date_func, dir)
     save(dir * "/graph1.png", plot_graph(get_column_summary(df, :author_id, date_func, length ∘ unique), ["Day of year", "N unique users", "Daily unique users"], false), px_per_unit = 3)
     save(dir * "/graph2.png", graph2(df, date_func), px_per_unit = 3)
-    save(dir * "/graph3.png", plot_graph(get_tweet_rate(df, :author_id, date_func, length ∘ unique), ["Day of year", "N unique users per min", "Daily unique user rate"], true), px_per_unit = 3)
+    save(dir * "/graph3.png", plot_graph(@transform(get_column_summary(df, :author_id, date_func, sum), :y = :y/1440),  ["Day of year", "N unique users per min", "Daily unique user rate"], true), px_per_unit = 3)
     save(dir * "/graph4.png", graph4(df, date_func), px_per_unit = 3)
     save(dir * "/graph5.png", graph5(df, date_func), px_per_unit = 3)
 end
@@ -123,6 +123,6 @@ function graph_metric(x)
 end
 
 functions = [graph_metric]
-gen_net_plots(functions, Day(1), false, "Plots2")
+#gen_net_plots(functions, Day(1), false, "Plots2")
 
 gen_stat_plots(dayofyear, "Plots2")

@@ -57,6 +57,20 @@ function wrap_in_makie(out_of_AoG, annotations, use_mad = false, fig = Figure())
 end
 
 
+function cumulative_sorting(df,column)
+    @chain df begin
+        @subset(:true_type .!= "retweeted")
+        groupby(:author_id)
+        combine(column => sum => :tot)
+        @orderby(-:tot)
+        @transform(_,
+        :cumulative = cumsum(:tot),
+        :rownumber = rownumber.(eachrow(_)))
+    end
+    return df
+end
+    
+
 function get_column_summary(twit_data::DataFrame, column::Symbol, date_func::Function, manip_func::Function = sum)
     df = select(twit_data, :date, column)
     rename!(df, column => "data")
