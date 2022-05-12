@@ -1,12 +1,13 @@
-install.packages("academictwitteR")
+#install.packages("academictwitteR")
+#install.packages("tidyverse")
 
 library(academictwitteR)
 library(tidyverse)
 
-dirs <- list.dirs(path = "Data", full.names = TRUE, recursive = TRUE)[-1]
+dirs <- list.dirs(path = "~/Data", full.names = TRUE, recursive = TRUE)[-1]
 
 for (dir in dirs) {
-  name <- str_split(dir, "/")[[1]][[2]]
+  name <- basename(dir)
   
   tweets_raw <- bind_tweets(data_path = dir)
   tweets_tidy <- bind_tweets(data_path = dir, output_format = "tidy")

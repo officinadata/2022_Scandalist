@@ -282,7 +282,7 @@ function generate_small_user_author_plot(g::AbstractGraph, mindeg=4)
         end
     end
     
-    display(gplot(go2, nodesize=nodesize, nodelabel=nodelabels, nodefillc=auc))
+    return gplot(go2, nodesize=nodesize, nodelabel=nodelabels, nodefillc=auc)
 end
 
 function generate_most_connected_user_author_plot(g::AbstractGraph, topnodes=20)
@@ -304,7 +304,7 @@ function generate_most_connected_user_author_plot(g::AbstractGraph, topnodes=20)
         end
     end
     
-    display(gplot(gtn, nodesize=nodesize, nodelabel=nodelabels, nodefillc=auc))
+    return gplot(gtn, nodesize=nodesize, nodelabel=nodelabels, nodefillc=auc)
 end
 
 function generate_unipartite_projection(g::AbstractGraph, userL)

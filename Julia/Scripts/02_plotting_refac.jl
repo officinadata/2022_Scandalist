@@ -21,6 +21,9 @@ using SparseArrays
 using DataStructures
 using MetaGraphs
 using GraphPlot
+using Compose
+import Cairo
+import Compose
 
 
 set_aog_theme!()
@@ -77,6 +80,14 @@ function _plot_stats(df, date_func, dir)
 end
 
 
+function _plot_graphs(df, dir)
+    g,userL = generate_author_retweet_source_graph(df)
+    author_mg = generate_unipartite_projection(g, userL)
+    Compose.draw(Compose.PNG(dir * "/graph6.png", 16cm, 16cm), generate_small_user_author_plot(author_mg, 5))
+    Compose.draw(Compose.PNG(dir * "/graph7.png", 16cm, 16cm), generate_most_connected_user_author_plot(author_mg))
+end
+
+
 function gen_stat_plots(date_func, out_dir)
     dfs = read_files("Data")
     scandals = read_names("Data")
@@ -89,6 +100,22 @@ function gen_stat_plots(date_func, out_dir)
 
     for i = 1:length(dfs)
         _plot_stats(dfs[i], date_func, out_dir * "/" * scandals[i])
+    end
+end
+
+
+function gen_graph_plots(out_dir)
+    dfs = read_files("Data")
+    scandals = read_names("Data")
+
+    for s in scandals
+        if !isdir(out_dir * "/" * s)
+            mkdir(out_dir * "/" * s)
+        end
+    end
+
+    for i = 1:length(dfs)
+        _plot_graphs(dfs[i], out_dir * "/" * scandals[i])
     end
 end
 
@@ -123,6 +150,16 @@ function graph_metric(x)
 end
 
 functions = [graph_metric]
-gen_net_plots(functions, Day(1), false, "Plots2")
+#gen_net_plots(functions, Day(1), false, "Plots2")
 
-gen_stat_plots(dayofyear, "Plots2")
+#gen_stat_plots(dayofyear, "Plots")
+gen_graph_plots("Plots")
+
+dfs = read_files("Data")
+
+g,userL = generate_author_retweet_source_graph(dfs[1])
+author_mg = generate_unipartite_projection(g, userL)
+
+
+Compose.draw(Compose.PNG("Plots/graph6.png", 16cm, 16cm, dpi=250), generate_small_user_author_plot(author_mg, 150))
+Compose.draw(Compose.PNG("Plots/graph7.png", 16cm, 16cm, dpi=250), generate_most_connected_user_author_plot(author_mg))
