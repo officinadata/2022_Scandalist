@@ -3,6 +3,9 @@ using DataFramesMeta
 using Graphs
 using SparseArrays
 using MetaGraphs
+using GraphPlot
+using Colors
+
 
 
 """
@@ -212,4 +215,107 @@ function plot_graph_metric(mg, met, per, sd, ed, cum = true)
     mapping(:date => "Date", :n => Symbol(met))
 
     return draw(plot)        
+end
+
+
+"""
+Takes a DataFrame of Twitter data and returns a bipartite network of tweet authors to to users who 
+retweeted or quoted their tweets based on the field author_id and sourcetweet_author_id which 
+represents replies and quote tweets 
+
+# Arguments
+- `twit_data::DataFrame`: Twitter data
+
+# Returns
+-  `SimpleDiGraph`: Directed bipartite network from user to original tweet autthor based on replies and quotes
+"""
+function generate_author_retweet_source_graph(twit_df::DataFrame)#::SimpleDiGraph
+    df_short = dropmissing(filter(:sourcetweet_type => in(["retweeted", "c(\"quoted\", \"replied_to\")","quoted"]), select(twit_df, :author_id, :sourcetweet_author_id, :sourcetweet_type, :reply_count, :like_count, :retweet_count, :quote_count)))
+    users = df_short[:,:author_id]
+    og_authors = parse.(Int64, df_short[:, :sourcetweet_author_id])
+    
+    EdgeListFromIterators(c1, c2) = [Graphs.SimpleEdge(c1[i] => c2[i]) for i in 1:length(c1)]
+
+    AssignUniqueNode(iter) = Dict([iter[i] => i  for i in 1:length(iter)])
+
+    users_dict = AssignUniqueNode(string.("u",unique(users)))
+    og_authors_dict = AssignUniqueNode(string.("a",unique(og_authors)))
+
+    users_length = length(users_dict)
+    og_authors_dict = Dict([key => (og_authors_dict[key]+users_length) for key in keys(og_authors_dict)])
+
+    mg = MetaGraph(length(og_authors_dict)+users_length)
+    set_indexing_prop!(mg, :id)
+    for (k, v) in users_dict
+        set_prop!(mg, v, :id, k)
+    end
+
+    for (k, v) in og_authors_dict
+        set_prop!(mg, v, :id, k)
+    end
+    
+    
+    users_indeces = [users_dict[string.("u",key)] for key in users]
+    og_authors_indeces = [og_authors_dict[string.("a",key)] for key in og_authors]
+
+    e = EdgeListFromIterators(users_indeces, og_authors_indeces)
+    for ei in e
+        add_edge!(mg, ei)
+    end
+    return mg, users_length
+end
+
+function generate_small_user_author_plot(g::AbstractGraph, mindeg=4)
+    go5 = g[[i for i in 1: length(degree(g)) if degree(g)[i]>=mindeg]]
+    go2 = go5[[i for i in 1: length(degree(go5)) if degree(go5)[i]>=1]]
+
+    nodesize = degree(g)[[i for i in 1: length(degree(g)) if degree(g)[i]>=mindeg]]
+    nodesize = nodesize[[i for i in 1: length(degree(go5)) if degree(go5)[i]>=1]]
+
+    nodelabels = [get_prop(go2, i, :id) for i in vertices(go2)]
+    auc=[]
+    for lbl in nodelabels
+        if string(lbl[1]) == "a"
+            push!(auc, colorant"orange")
+        else
+            push!(auc, colorant"blue")
+        end
+    end
+    
+    display(gplot(go2, nodesize=nodesize, nodelabel=nodelabels, nodefillc=auc))
+end
+
+function generate_most_connected_user_author_plot(g::AbstractGraph, topnodes=20)
+    sort_func(v)=-degree(g, v)
+
+    topn = sort(vertices(g), by=sort_func)[1:topnodes]
+
+ 
+    gtn = g[topn]
+    nodesize = [degree(g,v) for v in vertices(g)][[n for n in topn]]
+
+    nodelabels = [get_prop(gtn, i, :id) for i in vertices(gtn)]
+    auc=[]
+    for lbl in nodelabels
+        if string(lbl[1]) == "a"
+            push!(auc, colorant"orange")
+        else
+            push!(auc, colorant"blue")
+        end
+    end
+    
+    display(gplot(gtn, nodesize=nodesize, nodelabel=nodelabels, nodefillc=auc))
+end
+
+function generate_unipartite_projection(g::AbstractGraph, userL)
+    m = adjacency_matrix(g)
+    true_m = m[userL+1:length(m[:,1]), 1:userL]
+    author_mg = MetaGraph(true_m*true_m')
+    set_indexing_prop!(author_mg, :id)
+
+    for i in vertices(author_mg)
+        id = get_prop(g, i+userL, :id)
+        set_prop!(author_mg, i, :id, id)
+    end
+    return author_mg
 end

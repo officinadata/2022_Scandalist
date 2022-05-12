@@ -1,6 +1,7 @@
 using Pkg
 
-cd("Julia")
+
+cd("2022_Scandalist/Julia")
 Pkg.activate(".")
 Pkg.instantiate()
 
@@ -26,6 +27,17 @@ Pepsi_data = "Data/pepsi.csv" |> read_tw_data
 Redcross_data = "Data/RedCrossAU.csv" |> read_tw_data
 
 mit_data = "Data/MIT2.csv" |> read_tw_data
+
+g,userL = generate_author_retweet_source_graph(mit_data)
+author_mg = generate_unipartite_projection(g, userL)
+
+
+
+generate_small_user_author_plot(g, 5)
+generate_small_user_author_plot(author_mg, 5)
+generate_most_connected_user_author_plot(author_mg)
+
+
 mit_data.created_at = Date.(ZonedDateTime.(mit_data.created_at))
 sort(mit_data, order(:created_at))
 
@@ -121,3 +133,4 @@ visual(Lines) *
 mapping(:x, :y)
 
 draw(users)
+
