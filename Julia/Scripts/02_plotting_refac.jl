@@ -71,7 +71,7 @@ end
 function _plot_stats(df, date_func, dir)
     save(dir * "/graph1.png", plot_graph(get_column_summary(df, :author_id, date_func, length ∘ unique), ["Day of year", "N unique users", "Daily unique users"], false), px_per_unit = 3)
     save(dir * "/graph2.png", graph2(df, date_func), px_per_unit = 3)
-    save(dir * "/graph3.png", plot_graph(@transform(get_column_summary(df, :author_id, date_func, sum), :y = :y/1440),  ["Day of year", "N unique users per min", "Daily unique user rate"], true), px_per_unit = 3)
+    save(dir * "/graph3.png", plot_graph(@transform(get_column_summary(df, :author_id, date_func, length ∘ unique), :y = :y/1440),  ["Day of year", "N unique users per min", "Daily unique user rate"], true), px_per_unit = 3)
     save(dir * "/graph4.png", graph4(df, date_func), px_per_unit = 3)
     save(dir * "/graph5.png", graph5(df, date_func), px_per_unit = 3)
 end
