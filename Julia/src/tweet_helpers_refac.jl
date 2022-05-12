@@ -69,7 +69,6 @@ function cumulative_sorting(df,column)
         @select :cumulative :rownumber
         rename(:rownumber => :x, :cumulative => :y)
     end
-    println(names(df))
     return df
 end
     

@@ -78,7 +78,7 @@ end
 
 
 function gen_stat_plots(date_func, out_dir)
-    dfs = [read_files("Data")[1]]
+    dfs = read_files("Data")
     scandals = read_names("Data")
 
     for s in scandals
