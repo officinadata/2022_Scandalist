@@ -73,12 +73,13 @@ function cumulative_sorting(df,column)
         combine(column => sum => :tot)
         @orderby(-:tot)
         @transform(_,
-        :cumulative = cumsum(:tot).+1,
+        :cumulative = cumsum(:tot),
         :rownumber = rownumber.(eachrow(_)))
         @select :rownumber :cumulative
         rename(:rownumber => :x, :cumulative => :y)
-        #@transform(:x = log.(:x))
     end
+    #we add the intercept at 0,1
+    df = [DataFrame(x=0,y=1);df]
     return df
 end
     
