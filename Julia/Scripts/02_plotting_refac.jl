@@ -83,7 +83,7 @@ end
 function _plot_graphs(df, dir)
     g,userL = generate_author_retweet_source_graph(df)
     author_mg = generate_unipartite_projection(g, userL)
-    Compose.draw(Compose.PNG(dir * "/graph6.png", 16cm, 16cm), generate_small_user_author_plot(author_mg, 5))
+    Compose.draw(Compose.PNG(dir * "/graph6.png", 16cm, 16cm), generate_small_user_author_plot(author_mg, 200))
     Compose.draw(Compose.PNG(dir * "/graph7.png", 16cm, 16cm), generate_most_connected_user_author_plot(author_mg))
 end
 
@@ -161,5 +161,5 @@ g,userL = generate_author_retweet_source_graph(dfs[1])
 author_mg = generate_unipartite_projection(g, userL)
 
 
-Compose.draw(Compose.PNG("Plots/graph6.png", 16cm, 16cm, dpi=250), generate_small_user_author_plot(author_mg, 150))
+Compose.draw(Compose.PNG("Plots/graph6.png", 16cm, 16cm, dpi=250), generate_small_user_author_plot(author_mg, 200))
 Compose.draw(Compose.PNG("Plots/graph7.png", 16cm, 16cm, dpi=250), generate_most_connected_user_author_plot(author_mg))
