@@ -36,12 +36,21 @@ function make_aog_graph(df::DataFrame)
 end
 
 
-function wrap_in_makie(out_of_AoG, annotations, use_mad = false, fig = Figure())
-    ax1 = Axis(fig[1,1],
-        xlabel = annotations[1],
-        ylabel = annotations[2],
-        title = annotations[3]
+function wrap_in_makie(out_of_AoG, annotations, use_mad = false, fig = Figure(), use_log = false,)
+    if use_log
+        ax1 = Axis(fig[1,1],
+            yscale = log,
+            xlabel = annotations[1],
+            ylabel = annotations[2],
+            title = annotations[3],
         )
+    else
+        ax1 = Axis(fig[1,1],
+            xlabel = annotations[1],
+            ylabel = annotations[2],
+            title = annotations[3],
+        )
+    end
 
     draw!(ax1, out_of_AoG)
 
@@ -62,12 +71,13 @@ function cumulative_sorting(df,column)
         @subset(:true_type .!= "retweeted")
         groupby(:author_id)
         combine(column => sum => :tot)
-        @orderby(:tot)
+        @orderby(-:tot)
         @transform(_,
-        :cumulative = cumsum(:tot),
+        :cumulative = cumsum(:tot).+1,
         :rownumber = rownumber.(eachrow(_)))
-        @select :cumulative :rownumber
+        @select :rownumber :cumulative
         rename(:rownumber => :x, :cumulative => :y)
+        #@transform(:x = log.(:x))
     end
     return df
 end
@@ -85,8 +95,8 @@ function get_column_summary(twit_data::DataFrame, column::Symbol, date_func::Fun
 end
 
 
-function plot_graph(data::DataFrame, annotations, add_mad::Bool = false, f = Figure())
+function plot_graph(data::DataFrame, annotations, add_mad::Bool = false, f = Figure(), use_log = false)
     aog = make_aog_graph(data)
-    fig = wrap_in_makie(aog, annotations, add_mad, f)
+    fig = wrap_in_makie(aog, annotations, add_mad, f, use_log)
     return fig
 end

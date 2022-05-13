@@ -61,11 +61,11 @@ function graph5(df, date_func)
     fig = Figure()
 
     g1 = plot_graph(cumulative_sorting(df, :quote_count), 
-        ["Author", "Cumulative n quotes", "Cumulative quotes by author"], false, fig[1,1])
+        ["Author", "Cumulative n quotes", "Cumulative quotes by author"], false, fig[1,1], true)
     g2 = plot_graph(cumulative_sorting(df, :retweet_count),
-        ["Author", "Cumulative n retweets", "Cumulative retweets by author"], false, fig[1,2])
+        ["Author", "Cumulative n retweets", "Cumulative retweets by author"], false, fig[1,2], true)
     g3 = plot_graph(cumulative_sorting(df, :reply_count),
-        ["Author", "Cumulative n replies", "Cumulative replies by author"], false, fig[2,1])
+        ["Author", "Cumulative n replies", "Cumulative replies by author"], false, fig[2,1], true)
     
     return fig
 end
@@ -88,8 +88,7 @@ function _plot_graphs(df, dir)
 end
 
 
-function gen_stat_plots(date_func, out_dir)
-    dfs = read_files("Data")
+function gen_stat_plots(date_func, out_dir, dfs = read_files("Data"))
     scandals = read_names("Data")
 
     for s in scandals
@@ -152,14 +151,7 @@ end
 functions = [graph_metric]
 #gen_net_plots(functions, Day(1), false, "Plots2")
 
-#gen_stat_plots(dayofyear, "Plots")
-gen_graph_plots("Plots")
 
 dfs = read_files("Data")
-
-g,userL = generate_author_retweet_source_graph(dfs[1])
-author_mg = generate_unipartite_projection(g, userL)
-
-
-Compose.draw(Compose.PNG("Plots/graph6.png", 16cm, 16cm, dpi=250), generate_small_user_author_plot(author_mg, 200))
-Compose.draw(Compose.PNG("Plots/graph7.png", 16cm, 16cm, dpi=250), generate_most_connected_user_author_plot(author_mg))
+gen_stat_plots(dayofyear, "Plots", dfs)
+#gen_graph_plots("Plots")
