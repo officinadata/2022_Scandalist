@@ -65,7 +65,6 @@ function wrap_in_makie(out_of_AoG, annotations, use_mad = false, fig = Figure(),
     return fig
 end
 
-
 function cumulative_sorting(df,column)
     df = @chain df begin
         @subset(:true_type .!= "retweeted")
@@ -74,12 +73,12 @@ function cumulative_sorting(df,column)
         @orderby(-:tot)
         @transform(_,
         :cumulative = cumsum(:tot),
-        :rownumber = rownumber.(eachrow(_)))
+        :rownumber = rownumber.(eachrow(_))) .+ 1 # .+1 to make space for intercept
         @select :rownumber :cumulative
         rename(:rownumber => :x, :cumulative => :y)
     end
-    #we add the intercept at 0,1
-    df = [DataFrame(x=0,y=1);df]
+    #we add the intercept at 1,1 (that is 0,0 when logged)
+    df = [DataFrame(x=1,y=1);df]
     return df
 end
     
