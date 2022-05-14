@@ -152,6 +152,7 @@ functions = [graph_metric]
 #gen_net_plots(functions, Day(1), false, "Plots2")
 
 
-dfs = read_files("Data")
+dfs = [unique(df,[:tweet_id,:author_id]) for df in read_files("Data")]
+
 gen_stat_plots(dayofyear, "Plots", dfs)
 #gen_graph_plots("Plots")
