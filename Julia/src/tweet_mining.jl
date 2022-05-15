@@ -8,9 +8,7 @@ using TimeZones
 
 function read_tw_data(filename)
     
-    tw_data = filename |>
-    CSV.File |>
-    DataFrame
+    tw_data = CSV.read(filename,DataFrame, ntasks = 1)
     
     @transform!(tw_data, :date = ZonedDateTime.(:created_at,TW_dt))
 

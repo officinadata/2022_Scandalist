@@ -23,4 +23,12 @@ docs/site/
 # environment.
 Manifest.toml
 
+#ignore large csvs and data files
+*.tar.xz
+*.arrow
 *.csv
+
+#but include results
+!/Tweets/*/*/*.csv
+!/Tweets/*/*.csv
+!/Tweets/
