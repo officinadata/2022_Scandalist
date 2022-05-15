@@ -39,8 +39,8 @@ end
 function wrap_in_makie(out_of_AoG, annotations, use_mad = false, fig = Figure(), use_log = false,)
     if use_log
         ax1 = Axis(fig[1,1],
-            yscale = log,
-            xscale = log,
+            yscale = log10,
+            xscale = log10,
             xlabel = annotations[1],
             ylabel = annotations[2],
             title = annotations[3],
