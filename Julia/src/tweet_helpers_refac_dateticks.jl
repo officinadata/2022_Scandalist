@@ -35,6 +35,7 @@ function make_aog_graph(df::DataFrame)
     return aog
 end
 
+get_int_days(target_date,start_date) = (target_date - start_date).value
 
 function wrap_in_makie(out_of_AoG, annotations, use_mad = false, fig = Figure(), use_log = false,)
     if use_log
@@ -53,11 +54,13 @@ function wrap_in_makie(out_of_AoG, annotations, use_mad = false, fig = Figure(),
         )
     end
 
-    # dates = string.(out_of_AoG.data[1])
-    days = length(out_of_AoG.data[1])
-    # out_of_AoG.data.x = collect(1:days)
-    ax1.xticks = (out_of_AoG.data[1][1:14:days], string.(out_of_AoG.data[3])[1:14:days])
-    
+    if size(out_of_AoG.data) == (3,) && eltype(out_of_AoG.data[3]) == Date
+        ldays = length(out_of_AoG.data[1])
+        ax1.xticks = (out_of_AoG.data[1][1:7:ldays],
+                      string.(out_of_AoG.data[3])[1:7:ldays])
+        ax1.xticklabelrotation= π/4
+    end
+
     draw!(ax1, out_of_AoG)
 
     if use_mad
@@ -93,10 +96,16 @@ function get_column_summary(twit_data::DataFrame, column::Symbol, date_func::Fun
     df = select(twit_data, :date, column)
     rename!(df, column => "data")
     df = @chain df begin
-        @rtransform :d = date_func(:date)
-        @by(:d, :y = manip_func(:data))
-        @rtransform :x = dayofyear(:d)
-        @select(:x, :y, :d)
+        @rtransform :x = date_func(:date)
+        @by(:x, :y = manip_func(:data))
+    end
+
+    if eltype(df.x) == Date
+        df = @chain df begin
+            @transform :d = :x
+            @transform :x = get_int_days.(:d,minimum(:d))
+            @select(:x, :y, :d)
+        end
     end
 
     return df
