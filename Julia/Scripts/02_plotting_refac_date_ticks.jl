@@ -8,7 +8,7 @@ Pkg.instantiate()
 using Revise
 
 include("01_wrangling.jl")
-include("../src/tweet_helpers_refac.jl")
+include("../src/tweet_helpers_refac_dateticks.jl")
 include("../src/tweet_graphing.jl")
 
 using Chain
@@ -73,11 +73,11 @@ end
 
 
 function _plot_stats(df, date_func, dir)
-    save(dir * "/graph1.png", plot_graph(get_column_summary(df, :author_id, date_func, length ∘ unique), ["Day of year", "N unique users", "Daily unique users"], false), px_per_unit = 3)
+    save(dir * "/graph1.png", plot_graph(get_column_summary(df, :author_id, date_func, length ∘ unique), ["Day of year", "N unique users", "Daily unique users"], true), px_per_unit = 3)
     save(dir * "/graph2.png", graph2(df, date_func), px_per_unit = 3)
     save(dir * "/graph3.png", plot_graph(@transform(get_column_summary(df, :author_id, date_func, length ∘ unique), :y = :y/1440),  ["Day of year", "N unique users per min", "Daily unique user rate"], true), px_per_unit = 3)
     save(dir * "/graph4.png", graph4(df, date_func), px_per_unit = 3)
-    save(dir * "/graph5.png", graph5(df, date_func), px_per_unit = 3)
+    #save(dir * "/graph5.png", graph5(df, date_func), px_per_unit = 3)
 end
 
 
@@ -157,5 +157,5 @@ dfs = [unique(df,[:tweet_id,:author_id]) for df in read_files("Data")]
 
 get_date(x) = Date(x)
 
-gen_stat_plots(dayofyear, "PlotsDate", dfs)
+gen_stat_plots(get_date, "PlotsDate", dfs)
 #gen_graph_plots("Plots")

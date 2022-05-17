@@ -56,7 +56,7 @@ function wrap_in_makie(out_of_AoG, annotations, use_mad = false, fig = Figure(),
     # dates = string.(out_of_AoG.data[1])
     days = length(out_of_AoG.data[1])
     # out_of_AoG.data.x = collect(1:days)
-    ax1.xticks = (out_of_AoG.data[1][1:7:days], out_of_AoG.data[3][1:7:days])
+    ax1.xticks = (out_of_AoG.data[1][1:14:days], string.(out_of_AoG.data[3])[1:14:days])
     
     draw!(ax1, out_of_AoG)
 
