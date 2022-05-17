@@ -20,8 +20,8 @@ using Dates
 using SparseArrays
 using DataStructures
 
-dfs = read_files("Data")
-scandals = read_names("Data")
+dfs = read_files("Data");
+scandals = read_names("Data");
 
 original_dfs = [@subset(df,:true_type .== "NULL") for df in dfs]
 
@@ -65,7 +65,14 @@ end
 
 function kmost_active_users(df::DataFrame,k::I) where I<:Integer
 
-    if "c(\"quoted\", \"replied_to\")" ∈ names(df)
+    result_df = @chain df begin
+        groupby([:author_id,:user_username,:true_type])
+        combine(nrow => :n)
+        @orderby(:user_username)
+        unstack(:true_type,:n)
+    end
+
+    if "c(\"quoted\", \"replied_to\")" ∈ names(result_df)
         renaming_dict = Dict("user_username" => "username",
         "replied_to" => "n_replies",
         "retweeted" => "n_retweets",
@@ -73,11 +80,7 @@ function kmost_active_users(df::DataFrame,k::I) where I<:Integer
         "quoted" => "n_quoted",
         "c(\"quoted\", \"replied_to\")" => "n_quoting_replies")
 
-        result_df = @chain df begin
-            groupby([:author_id,:user_username,:true_type])
-            combine(nrow => :n)
-            @orderby(:user_username)
-            unstack(:true_type,:n)
+        out_df = @chain result_df begin
             rename(renaming_dict)
             @rtransform(:total = sum(skipmissing([:n_replies,:n_retweets,:n_authored,:n_quoted,:n_quoting_replies])))
             @orderby(-1 .* :total)
@@ -90,11 +93,7 @@ function kmost_active_users(df::DataFrame,k::I) where I<:Integer
         "NULL" => "n_authored",
         "quoted" => "n_quoted")
 
-        result_df = @chain df begin
-            groupby([:author_id,:user_username,:true_type])
-            combine(nrow => :n)
-            @orderby(:user_username)
-            unstack(:true_type,:n)
+        out_df = @chain result_df begin
             rename(renaming_dict)
             @rtransform(:total = sum(skipmissing([:n_replies,:n_retweets,:n_authored,:n_quoted])))
             @orderby(-1 .* :total)
@@ -102,11 +101,67 @@ function kmost_active_users(df::DataFrame,k::I) where I<:Integer
 
     end
 
-    return result_df[1:k,:]
+    return out_df[1:k,:]
 end
 
 for (df,scandal) in zip(dfs, scandals)
     mkpath("Tweets/k_top_active_users/" * scandal)
     CSV.write( "Tweets/k_top_active_users/" * scandal * "/top_20_users.csv"  , kmost_active_users(df, 20))
     @show scandal
+end
+
+## Peak and out of peak tweets
+
+dfs_peak = readdir("CleanData"; join = true) .|> Arrow.Table .|> DataFrame
+
+for df in dfs_peak
+    df.date = Date.(df.date)
+end
+
+over_mad(x) = median(x) + mad(x)
+get_date(x) = Date(x)
+
+function peak_dates(df,thresh_fun = over_mad)
+    uqu = get_column_summary(df, :author_id, get_date, length ∘ unique)
+    which_date = @subset uqu :y .> over_mad(uqu.y)
+    peak_dates = which_date.x
+
+    return peak_dates
+end
+
+for (df,scandal) in zip(dfs_peak, scandals)
+
+    peak = peak_dates(df)
+
+    df_in = @subset df @byrow  Date(:date) ∈ peak
+    for metric in metrics
+        mkpath("Tweets/peak_k_top_tweets_by_metric/" * scandal)
+        CSV.write( "Tweets/peak_k_top_tweets_by_metric/" * scandal * "/top_50_" * metric * ".csv"  , kmost_tweets(df_in, 50, metric))
+    end
+
+    df_out = @subset df @byrow  Date(:date) ∉ peak
+    for metric in metrics
+        mkpath("Tweets/outofpeak_k_top_tweets_by_metric/" * scandal)
+        CSV.write( "Tweets/outofpeak_k_top_tweets_by_metric/" * scandal * "/top_20_" * metric * ".csv"  , kmost_tweets(df_out, 20, metric))
+    end
+end
+
+for df in dfs
+    df.date = Date.(df.date)
+end
+
+for (df,scandal) in zip(dfs, scandals)
+
+    @show scandal
+
+    peak = peak_dates(df)
+
+    df_in = @subset df @byrow  :date ∈ peak
+    mkpath("Tweets/peak_k_top_active_users/" * scandal)
+    CSV.write( "Tweets/peak_k_top_active_users/" * scandal * "/top_20_users.csv"  , kmost_active_users(df_in, 20))
+
+    df_out = @subset df @byrow  :date ∉ peak
+    mkpath("Tweets/outofpeak_k_top_active_users/" * scandal)
+    CSV.write( "Tweets/outofpeak_k_top_active_users/" * scandal * "/top_10_users.csv"  , kmost_active_users(df_out, 10))
+    println("done\n")
 end
